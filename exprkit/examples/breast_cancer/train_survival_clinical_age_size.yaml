@@ -1,0 +1,23 @@
+# Overall survival in GSE96058 from clinical variables only (age_size).
+# Runs without the expression file; this is the baseline a gene model must beat.
+
+data: data/processed/gse96058_clinical
+output: results/gse96058_os_clinical_age_size
+seed: 42
+task: survival
+target: {time: time, event: event}
+group_column: patient
+one_per_group: true                      # drop the 136 replicate profiles
+genes: {use: false}
+covariates:
+  numeric: [age, tumour_size]
+  categorical: []
+model:
+  type: cox
+  params: {alpha: 0.01}
+evaluation:
+  type: repeated_cv
+  n_splits: 5
+  n_repeats: 10
+  bootstrap: 1000
+  permutations: 50

@@ -1,0 +1,27 @@
+# Cancer versus normal within GSE22820 only, the one study with normal tissue.
+# Pooling studies would confound class with study (all normals come from here);
+# run batch-check (see run.sh) to measure how strong that confounding would be.
+
+data: data/processed/gse22820
+output: results/gse22820_cancer_vs_normal
+seed: 42
+task: classification
+target:
+  column: label
+  positive_class: cancer
+genes:
+  filter:
+    max_mode_fraction: 0.95
+    top_k_variance: 2000
+model:
+  type: logistic                         # L2, class weighted: suited to 10 normals
+  grid: {C: [0.001, 0.01, 0.1, 1.0]}
+  inner_folds: 3
+evaluation:
+  type: repeated_cv
+  n_splits: 5                            # each normal sample is tested once per repeat
+  n_repeats: 20
+  bootstrap: 2000
+  permutations: 200
+checks:
+  batch_column: dataset

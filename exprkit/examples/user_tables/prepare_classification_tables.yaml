@@ -1,0 +1,32 @@
+# Ready-made train / validation / test tables (samples in rows, genes in
+# columns, a 0/1 Label column, no sample IDs), combined into one dataset.
+# The split each row came from is kept in the 'dataset' column.
+#
+# What checking these files found:
+# * train_data.csv: 2,868 normal rows are only 8 distinct profiles, each copied
+#   344 to 377 times; the 2,868 tumour rows are distinct.
+# * val_data.csv and test_data.csv: 1 normal each.
+# duplicates: drop keeps one copy of each profile, so models see 10 real normals.
+
+output: data/processed/user_classification
+duplicates: drop                         # warn | drop | group
+combine: inner
+sources:
+  - name: train
+    expression: &table
+      path: data/user/train_data.csv
+      format: table
+      orientation: samples_by_genes
+      index_column: null                 # no sample IDs: rows become train_data_1, train_data_2, ...
+      metadata_columns: [Label]
+    columns: &cols
+      label:
+        type: category
+        from: Label
+        map: {0: normal, 1: cancer}
+  - name: val
+    expression: {<<: *table, path: data/user/val_data.csv}
+    columns: *cols
+  - name: test
+    expression: {<<: *table, path: data/user/test_data.csv}
+    columns: *cols

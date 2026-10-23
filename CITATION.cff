@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use exprkit, please cite it as below."
+title: "Breast cancer gene expression: honest machine learning with exprkit"
+type: software
+authors:
+  - family-names: Adeniyi
+    given-names: Adebayo A.
+version: 0.4.0
+date-released: 2026-10-22
+license: MIT
+repository-code: "https://github.com/AdebayoAAdeniyi/breast-cancer-gene-expression"
+keywords:
+  - gene expression
+  - bioinformatics
+  - machine learning
+  - survival analysis
+  - breast cancer
+  - GEO

@@ -1,0 +1,13 @@
+# Tumour versus normal across four studies (genes79).
+# leave_one_group_out: train on three studies, test on the fourth, for each study in turn.
+data: data/processed/multistudy_tumour_normal
+output: results/multistudy_tumour_normal_genes79
+seed: 42
+task: classification
+target: {column: label, positive_class: tumour}
+group_column: patient                    # paired tumour/normal samples stay together
+genes: {gene_list: gene_lists/breast_cancer_79_selected.txt, filter: {max_mode_fraction: 1.0}}
+
+model: {type: logistic, grid: {C: [0.001, 0.01, 0.1]}}
+evaluation: {type: leave_one_group_out, column: dataset, bootstrap: 1000}
+checks: {batch_column: dataset}

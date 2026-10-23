@@ -1,0 +1,68 @@
+# exprkit prepare: raw files -> prepared dataset
+# Relative paths are read from the folder you run exprkit in.
+# Run `exprkit inspect <file>` on each input first to see sample IDs,
+# metadata fields and the value scale.
+
+output: data/processed/my_dataset        # folder that will hold expression.parquet, samples.csv, report.json
+
+sources:                                 # one entry per study; several entries are combined
+  - name: STUDY1                         # stored in the 'dataset' column of samples.csv
+
+    expression:
+      path: data/raw/STUDY1_series_matrix.txt.gz
+      format: geo_series_matrix          # geo_series_matrix | table
+      # For format: table
+      # orientation: genes_by_samples    # genes_by_samples | samples_by_genes
+      # sep: ","                         # default: "," for .csv, tab otherwise
+      # index_column: 0                  # column holding gene or feature IDs (or sample IDs); null = no IDs
+      # metadata_columns: [Label, Age]   # samples_by_genes tables: columns that are not genes
+
+    # Where sample information comes from. Without this block, a GEO series
+    # matrix supplies its own metadata; a table has none.
+    metadata:
+      # geo_series_matrix:               # one or more series matrices (e.g. one per platform)
+      #   - data/raw/STUDY1-GPL1_series_matrix.txt.gz
+      # sample_sheet:                    # your own CSV/TSV, one row per sample
+      #   path: data/raw/samples.csv
+      #   id_column: sample_id
+
+    # If expression sample names are not the metadata IDs (e.g. the expression
+    # file uses sample titles while GEO metadata is keyed by GSM accession),
+    # name the metadata field whose values equal the expression sample names.
+    # match_expression_on: title
+
+    transform: none                      # none | log2 | log2p1 | log2cpm  (models expect log scale values)
+
+    # Map probe / transcript IDs to gene symbols. Omit if the expression file
+    # already uses gene symbols.
+    id_mapping:
+      path: data/raw/GPLxxxx-nnnn.txt    # GEO platform "full table" or any ID -> symbol table
+      id_column: ID
+      symbol_column: GENE_SYMBOL
+      drop_ambiguous: true               # drop IDs annotated to several genes ("A /// B")
+
+    # Columns to create in samples.csv. Types: category, number, event, text, group, value.
+    columns:
+      label:
+        type: category
+        from: source_name_ch1            # metadata field (see exprkit inspect)
+        rules:                           # regular expressions; every sample must match exactly one
+          normal: "(?i)normal"
+          tumour: "(?i)tumou?r|cancer|carcinoma"
+        expected: {normal: 10, tumour: 176}   # optional: stop if the counts differ
+      # time:  {type: number, from: "char:overall survival days"}
+      # event: {type: event,  from: "char:overall survival event"}
+      # age:   {type: number, from: "char:age at diagnosis"}
+      # patient:
+      #   type: group
+      #   from: title
+      #   strip_regex: "repl$"           # remove a replicate suffix so replicates share a group
+      #   expected_groups_with_replicates: 136
+      # tissue: {value: tumour}          # constant for every sample of this source
+      # label: {type: category, from: Label, map: {0: normal, 1: tumour}}   # coded labels
+      # cohort: {type: category, from: _id, rules: {A: "^GSM25", B: "^GSM59"}}  # from the sample ID
+      # size: {type: number, from: size, missing_when: {field: _id, pattern: "^GSM59"}}  # known bad values
+
+combine: inner                           # with several sources: inner (shared genes) | outer (all genes, NaN where absent)
+duplicates: warn                         # identical profiles under different IDs: warn | drop | group
+normalise: none                          # none | per_sample_rank (makes platforms comparable; see user guide)

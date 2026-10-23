@@ -1,0 +1,34 @@
+# exprkit select-genes: build a gene list from one or more prepared datasets.
+# Genes are kept when they (1) occur in enough datasets, (2) are associated with
+# the target in the same direction across datasets, (3) are stable under
+# resampling (optional), and (4) are not highly correlated with a better gene.
+#
+# The list is chosen using these samples. Evaluate it on independent data, or
+# use genes.select in a train config to repeat the selection inside each fold.
+
+data:                                    # one or more prepared dataset folders
+  - data/processed/study1
+  - data/processed/study2
+# split_by: dataset                      # or: one folder holding several datasets, compared by this column
+output: results/gene_selection
+seed: 42
+
+task: classification                     # classification | survival | regression
+target:
+  column: label
+  positive_class: tumour
+  # survival: time: time, event: event
+where: {}                                # optional row filter
+group_column: null
+one_per_group: false
+gene_list: null                          # optional: only consider these genes
+
+n_genes: 100                             # size of the final list
+min_datasets: null                       # present in at least this many datasets (null = all)
+min_sign_agreement: 1.0                  # fraction of datasets agreeing on the direction of the effect
+max_mode_fraction: 0.95                  # a gene is "absent" in a dataset if one value covers >= 95% of samples
+max_correlation: 0.8                     # skip a gene correlated above this with a better ranked gene
+stability:                               # L1 model refitted on random halves; n_boot: 0 to skip
+  n_boot: 50
+  top: 500                               # only the 500 best genes by combined z enter this step
+  strength: 0.05                         # C for logistic, alpha for Cox or lasso

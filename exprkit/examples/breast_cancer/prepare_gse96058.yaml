@@ -1,0 +1,44 @@
+# GSE96058 (SCAN-B): RNA sequencing of primary breast cancers on two Illumina
+# platforms (GPL11154: 3,069 samples, GPL18573: 340 samples).
+# Expression is a supplementary CSV (genes in rows, samples in columns);
+# clinical data are in the two series matrices.
+#
+# Checked on the series matrices (22 October 2026):
+# * 3,409 samples = 3,273 tumours + 136 replicates titled "F<n>repl"
+# * characteristic names below exist; "NA" marks missing values
+# * overall survival: 336 events among the 3,273 tumours, median follow up 1,590 days
+# * the series data processing notes say the CSV holds 30,865 gene symbols as
+#   log2(FPKM + 0.1), with transcript FPKM summed per symbol: already log scale
+# Still to check once the expression file is downloaded:
+# * its column names are the sample titles (F1, F2, ..., F8repl)
+
+output: data/processed/gse96058
+sources:
+  - name: GSE96058
+    expression:
+      path: data/raw/GSE96058_gene_expression_3273_samples_and_136_replicates_transformed.csv.gz
+      format: table
+      orientation: genes_by_samples
+    metadata:
+      geo_series_matrix:
+        - data/raw/GSE96058-GPL11154_series_matrix.txt
+        - data/raw/GSE96058-GPL18573_series_matrix.txt
+    match_expression_on: title
+    transform: none                      # already log2(FPKM + 0.1)
+    columns:
+      time:        {type: number, from: "char:overall survival days"}
+      event:       {type: event,  from: "char:overall survival event"}
+      age:         {type: number, from: "char:age at diagnosis"}
+      tumour_size: {type: number, from: "char:tumor size"}
+      node_status: {type: category, from: "char:lymph node status"}
+      grade:       {type: category, from: "char:nhg"}
+      er:          {type: category, from: "char:er status"}
+      her2:        {type: category, from: "char:her2 status"}
+      pam50:       {type: category, from: "char:pam50 subtype"}
+      platform:    {type: category, from: platform_id}     # GPL11154 (HiSeq 2000) or GPL18573 (NextSeq 500)
+      patient:
+        type: group
+        from: title
+        strip_regex: "repl$"
+        expected_groups_with_replicates: 136
+      label: {value: cancer}             # all samples are tumours; used by batch-check

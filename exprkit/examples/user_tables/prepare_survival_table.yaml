@@ -1,0 +1,44 @@
+# A ready-made samples-by-genes table with clinical columns inside the same file
+# (merged_expression_survival.csv: 4,297 tumours x 216 genes + survival data).
+#
+# What checking this file found (scripts in docs/case_study_breast_cancer.md):
+# * 3,409 rows are GSE96058 (GSM2528xxx to GSM2532xxx): survival time and event
+#   agree with GEO for every one, expression correlates 0.995 with GEO log2 FPKM
+#   (values here are standardised per gene).
+# * 888 rows come from four other GEO series (GSM123..., GSM549..., GSM5979..., GSM750...).
+# * For 734 of them (GSM549..., GSM5979..., GSM750...) tumour size equals
+#   12.50 + 0.118 x age exactly: it was filled in from age, so it is set to missing here.
+
+output: data/processed/user_survival
+sources:
+  - name: merged_table
+    expression:
+      path: data/user/merged_expression_survival.csv
+      format: table
+      orientation: samples_by_genes
+      index_column: Sample ID
+      metadata_columns: [Sample_title, Label, Age at Diagnosis, tumor size, overall survival days, overall survival event]
+    transform: none                      # already standardised per gene
+    columns:
+      time:  {type: number, from: overall survival days}
+      event: {type: event,  from: overall survival event}
+      age:   {type: number, from: Age at Diagnosis}
+      tumour_size:
+        type: number
+        from: tumor size
+        missing_when: {field: _id, pattern: "^GSM(549|5979|750)"}
+      cohort:
+        type: category
+        from: _id
+        rules:
+          GSE96058: "^GSM25(2[89]|3[0-2])"
+          other_GSM123: "^GSM123"
+          other_GSM549: "^GSM549"
+          other_GSM5979: "^GSM5979"
+          other_GSM750: "^GSM750"
+        expected: {GSE96058: 3409}
+      patient:
+        type: group
+        from: Sample_title
+        strip_regex: "repl$"
+        expected_groups_with_replicates: 136

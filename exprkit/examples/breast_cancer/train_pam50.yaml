@@ -1,0 +1,26 @@
+# Multiclass example: predict the PAM50 subtype (LumA, LumB, Her2, Basal, Normal)
+# from expression in GSE96058. Needs the expression file.
+# The series notes say PAM50 was assigned from these RNA sequencing data with a
+# nearest centroid method (Parker et al. 2009), so a high
+# score here shows the tool can recover a known expression based label; it is
+# not an independent biological finding.
+
+data: data/processed/gse96058
+output: results/gse96058_pam50
+seed: 42
+task: classification
+target: {column: pam50}
+group_column: patient
+one_per_group: true
+genes:
+  filter: {top_k_variance: 2000}
+model:
+  type: logistic
+  grid: {C: [0.001, 0.01, 0.1]}
+  inner_folds: 3
+evaluation:
+  type: repeated_cv
+  n_splits: 5
+  n_repeats: 2
+  bootstrap: 1000
+  permutations: 0

@@ -1,0 +1,62 @@
+# exprkit train: evaluate a model, fit it on all rows, save it
+# Relative paths are read from the folder you run exprkit in.
+
+data: data/processed/my_dataset          # a prepared dataset folder
+output: results/my_model
+seed: 42
+
+task: classification                     # classification | survival | regression
+
+target:
+  column: label                          # classification or regression target in samples.csv
+  positive_class: tumour                 # binary classification: the class whose probability is scored
+  # survival instead:
+  # time: time
+  # event: event
+
+where:                                   # optional: keep only these rows
+  # dataset: [STUDY1]
+
+group_column: null                       # rows sharing a value (patient, replicate set) never split apart
+one_per_group: false                     # keep only the first row of each group
+
+genes:
+  use: true                              # false: covariates only
+  gene_list: null                        # optional text file, one gene symbol per line (e.g. a published signature)
+  filter:                                # fitted on training rows inside every fold
+    max_missing_fraction: 0.5
+    max_mode_fraction: 0.95              # drop genes where one value covers >= 95% of samples
+    top_k_variance: 2000                 # keep the most variable genes (null = keep all)
+  select: null                           # e.g. {n_genes: 50, max_correlation: 0.7}: choose genes inside each fold
+
+covariates:                              # clinical variables from samples.csv
+  numeric: []                            # e.g. [age, tumour_size]
+  categorical: []                        # e.g. [er_status]
+compare_with_covariates_only: true       # if covariates are given: also score a covariates only model
+
+model:
+  type: logistic
+  # classification: logistic | elasticnet_logistic | random_forest | mlp
+  # regression:     ridge | elasticnet | random_forest
+  # survival:       cox | coxnet | deepsurv
+  grid:                                  # tuned by inner cross validation on training rows (nested CV)
+    C: [0.01, 0.1, 1.0]                  # logistic; coxnet uses alpha, ridge uses alpha
+  inner_folds: 3
+  # params: {}                           # fixed settings, e.g. {l1_ratio: 0.5}
+
+balance:
+  method: weights                        # weights | undersample (classification; never copies samples)
+  # n_bags: 10
+  # ratio: 1.0
+
+evaluation:
+  type: repeated_cv                      # repeated_cv | holdout | leave_one_group_out
+  # column: dataset                      # leave_one_group_out: one fold per value of this column
+  n_splits: 5
+  n_repeats: 10
+  # test_fraction: 0.2                   # holdout only
+  bootstrap: 1000
+  permutations: 100                      # label permutation test; 0 to skip
+
+checks:
+  batch_column: dataset                  # warn when a class occurs in only one batch

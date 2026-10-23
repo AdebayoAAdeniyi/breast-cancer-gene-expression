@@ -1,0 +1,17 @@
+# Survival from the ready-made table, GSE96058 rows only (verified against GEO):
+# 216 genes + age + tumour size, elastic net Cox, compared with age + size alone.
+data: data/processed/user_survival
+output: results/user_tables/survival_gse96058_216genes
+seed: 42
+task: survival
+target: {time: time, event: event}
+where: {cohort: [GSE96058]}
+group_column: patient
+one_per_group: true
+genes: {filter: {max_mode_fraction: 1.0}}
+covariates: {numeric: [age, tumour_size]}
+model:
+  type: coxnet
+  params: {l1_ratio: 0.5}
+  grid: {alpha: [0.01, 0.02, 0.05, 0.1, 0.2]}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 5, bootstrap: 1000, permutations: 0}

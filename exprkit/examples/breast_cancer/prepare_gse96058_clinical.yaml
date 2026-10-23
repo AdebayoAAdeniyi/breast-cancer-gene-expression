@@ -1,0 +1,28 @@
+# GSE96058 clinical data only (no expression): enough to fit and evaluate the
+# clinical baseline survival model while the large expression file is pending.
+# Field names and the replicate suffix were checked on both series matrices
+# (3,409 samples = 3,273 tumours + 136 replicates titled "F<n>repl").
+
+output: data/processed/gse96058_clinical
+sources:
+  - name: GSE96058
+    metadata:
+      geo_series_matrix:
+        - data/raw/GSE96058-GPL11154_series_matrix.txt
+        - data/raw/GSE96058-GPL18573_series_matrix.txt
+    columns: &clinical
+      time:        {type: number, from: "char:overall survival days"}
+      event:       {type: event,  from: "char:overall survival event"}
+      age:         {type: number, from: "char:age at diagnosis"}
+      tumour_size: {type: number, from: "char:tumor size"}
+      node_status: {type: category, from: "char:lymph node status"}
+      grade:       {type: category, from: "char:nhg"}
+      er:          {type: category, from: "char:er status"}
+      her2:        {type: category, from: "char:her2 status"}
+      pam50:       {type: category, from: "char:pam50 subtype"}
+      patient:
+        type: group
+        from: title
+        strip_regex: "repl$"
+        expected_groups_with_replicates: 136
+      label: {value: cancer}

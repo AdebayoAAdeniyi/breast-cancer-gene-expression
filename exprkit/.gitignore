@@ -1,0 +1,18 @@
+# data and outputs are never committed
+data/raw/
+data/processed/
+data/user/
+data/combined/
+results/
+models/
+*.pt
+*.pth
+*.pkl
+
+# python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+.ipynb_checkpoints/
+.DS_Store

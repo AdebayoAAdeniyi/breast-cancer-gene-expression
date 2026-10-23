@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exprkit"
+version = "0.4.0"
+description = "Prepare gene expression data, train classification, survival and regression models with honest evaluation, and predict on new samples"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Adebayo A. Adeniyi" }]
+keywords = ["gene expression", "bioinformatics", "machine learning", "survival analysis", "GEO", "transcriptomics"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.10",
+  "scikit-learn>=1.8",
+  "scikit-survival>=0.25",
+  "matplotlib>=3.7",
+  "pyyaml>=6.0",
+  "pyarrow>=14",
+  "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+deep = ["torch>=2.0"]
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/AdebayoAAdeniyi/breast-cancer-gene-expression"
+Documentation = "https://github.com/AdebayoAAdeniyi/breast-cancer-gene-expression/tree/main/exprkit/docs"
+Issues = "https://github.com/AdebayoAAdeniyi/breast-cancer-gene-expression/issues"
+
+[project.scripts]
+exprkit = "exprkit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+exprkit = ["templates/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

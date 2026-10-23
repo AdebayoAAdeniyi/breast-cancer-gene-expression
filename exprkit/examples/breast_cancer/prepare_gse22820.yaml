@@ -1,0 +1,30 @@
+# GSE22820: Agilent Whole Human Genome 4x44K microarray (GPL6480), 176 primary
+# breast cancers and 10 normal breast samples.
+#
+# Checked on the GEO files (exprkit inspect, 22 October 2026):
+# * source_name_ch1 is "primary breast cancer" (176) or "normal breast tissue" (10).
+# * Values are not logged: range 0.01 to 20566, median 0.85. The series says the
+#   data were imported into GeneSpring 7.3.1 with "default normalization
+#   procedures". Values centred near 1 are what per gene normalisation to the
+#   median produces, so they behave like ratios; log2 turns them into log ratios.
+
+output: data/processed/gse22820
+sources:
+  - name: GSE22820
+    expression:
+      path: data/raw/GSE22820_series_matrix.txt
+      format: geo_series_matrix
+    transform: log2                      # values are positive ratios (min 0.01), see above
+    id_mapping:
+      path: data/raw/GPL6480-9577.txt    # GPL6480 "Download full table"
+      id_column: ID
+      symbol_column: GENE_SYMBOL
+      drop_ambiguous: true
+    columns:
+      label:
+        type: category
+        from: source_name_ch1
+        rules:
+          normal: "(?i)normal"
+          cancer: "(?i)tumou?r|cancer|carcinoma"
+        expected: {normal: 10, cancer: 176}

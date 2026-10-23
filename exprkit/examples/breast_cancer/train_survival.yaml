@@ -1,0 +1,29 @@
+# Overall survival in GSE96058: does expression add to standard clinical factors?
+# Needs the expression file. The clinical only baseline (train_survival_clinical_full.yaml)
+# reaches C = 0.76, so that is the bar this model has to clear.
+
+data: data/processed/gse96058
+output: results/gse96058_os_genes_clinical
+seed: 42
+task: survival
+target: {time: time, event: event}
+group_column: patient
+one_per_group: true
+genes:
+  filter:
+    top_k_variance: 1000
+covariates:
+  numeric: [age, tumour_size]
+  categorical: [node_status, grade, er, her2]
+compare_with_covariates_only: true
+model:
+  type: coxnet                           # elastic net Cox; deepsurv is the neural alternative (needs torch)
+  params: {l1_ratio: 0.5}
+  grid: {alpha: [0.003, 0.01, 0.03, 0.1, 0.3]}   # 0.003 is numerically unstable here and is skipped (scored as missing); 0.3 zeroes every coefficient
+  inner_folds: 3
+evaluation:
+  type: repeated_cv
+  n_splits: 5
+  n_repeats: 2
+  bootstrap: 1000
+  permutations: 0                        # expensive for survival; set e.g. 20 for a final run

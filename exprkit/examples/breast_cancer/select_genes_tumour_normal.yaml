@@ -1,0 +1,14 @@
+# Tumour versus normal genes that are present in all four studies, change in the
+# same direction in all four, are stable under resampling, and are not highly
+# correlated with a better gene.
+data: data/processed/multistudy_tumour_normal
+split_by: dataset
+output: results/gene_selection_tumour_normal
+seed: 42
+task: classification
+target: {column: label, positive_class: tumour}
+n_genes: 50
+min_datasets: 4
+min_sign_agreement: 1.0
+max_correlation: 0.8
+stability: {n_boot: 50, top: 500, strength: 0.05}

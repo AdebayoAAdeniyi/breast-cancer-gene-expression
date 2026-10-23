@@ -1,0 +1,12 @@
+# The design of the ready-made tables: 10 normals (all GSE22820) against 3,585
+# tumours (176 GSE22820 + 3,409 GSE96058), on the 79 selected genes, with the
+# copied normals removed. Class weights replace copying.
+data: data/processed/user_classification
+output: results/user_tables/pooled_as_provided
+seed: 42
+task: classification
+target: {column: label, positive_class: cancer}
+genes: {filter: {max_mode_fraction: 1.0}}         # keep all 79 genes
+model: {type: logistic, grid: {C: [0.01, 0.1, 1.0]}}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 10, bootstrap: 1000, permutations: 100}
+checks: {batch_column: study}

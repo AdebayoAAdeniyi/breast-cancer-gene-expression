@@ -1,0 +1,20 @@
+# GEO GSE96058 with a user supplied gene list (gene_lists/breast_cancer_79_selected.txt)
+# plus the full clinical factors, compared with the clinical factors alone.
+data: data/processed/gse96058
+output: results/gse96058_os_79genes_clinical
+seed: 42
+task: survival
+target: {time: time, event: event}
+group_column: patient
+one_per_group: true
+genes:
+  gene_list: gene_lists/breast_cancer_79_selected.txt
+  filter: {max_mode_fraction: 1.0}
+covariates:
+  numeric: [age, tumour_size]
+  categorical: [node_status, grade, er, her2]
+model:
+  type: coxnet
+  params: {l1_ratio: 0.5}
+  grid: {alpha: [0.01, 0.02, 0.05, 0.1, 0.2]}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 5, bootstrap: 1000, permutations: 0}

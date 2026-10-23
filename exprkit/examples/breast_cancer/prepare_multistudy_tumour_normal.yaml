@@ -1,0 +1,58 @@
+# Four GEO studies that each contain both normal and tumour breast tissue,
+# combined on their shared genes and made comparable with per sample ranks.
+#
+# Study      Platform                    Normal  Tumour  Normal tissue           Values as distributed
+# GSE22820   Agilent 4x44K (GPL6480)         10     176  normal breast tissue    ratios, unlogged (log2 here)
+# GSE15852   Affymetrix U133A (GPL96)        43      43  paired normal breast    MAS 5.0 signal, unlogged (log2 here)
+# GSE42568   Affymetrix U133 Plus 2 (GPL570) 17     104  normal breast           GC-RMA, log2
+# GSE70947   Agilent (GPL13607)             148     148  adjacent to tumour      limma quantile normalised, log2
+#
+# GSE15852 and GSE70947 are paired (tumour and normal from the same patient), so
+# 'patient' groups keep both samples of a pair in the same fold.
+# GSE70947's source name for normals is "breast tissue adjacent to tumor", which
+# contains the word tumor: its labels therefore come from char:tissue instead.
+# Normal tissue adjacent to a tumour can carry tumour related changes, so the
+# four studies do not define "normal" identically.
+
+output: data/processed/multistudy_tumour_normal
+combine: inner
+normalise: per_sample_rank
+duplicates: warn
+sources:
+  - name: GSE22820
+    expression: {path: data/raw/GSE22820_series_matrix.txt, format: geo_series_matrix}
+    transform: log2
+    id_mapping: {path: data/raw/GPL6480-9577.txt, id_column: ID, symbol_column: GENE_SYMBOL}
+    columns:
+      label: {type: category, from: source_name_ch1, rules: {normal: "(?i)normal", tumour: "(?i)cancer"},
+              expected: {normal: 10, tumour: 176}}
+      patient: {type: group, from: _id}
+
+  - name: GSE15852
+    expression: {path: data/raw/GSE15852_series_matrix.txt, format: geo_series_matrix}
+    transform: log2
+    id_mapping: {path: data/raw/GPL96.annot.gz, id_column: ID, symbol_column: Gene symbol}
+    columns:
+      label: {type: category, from: source_name_ch1, rules: {normal: "(?i)normal", tumour: "(?i)tumou?r"},
+              expected: {normal: 43, tumour: 43}}
+      patient: {type: group, from: title, strip_regex: "^(Normal|Cancer) |[NT]$",
+                expected_groups_with_replicates: 43}
+
+  - name: GSE42568
+    expression: {path: data/raw/GSE42568_series_matrix.txt, format: geo_series_matrix}
+    transform: none
+    id_mapping: {path: data/raw/GPL570.annot.gz, id_column: ID, symbol_column: Gene symbol}
+    columns:
+      label: {type: category, from: source_name_ch1, rules: {normal: "(?i)normal", tumour: "(?i)cancer"},
+              expected: {normal: 17, tumour: 104}}
+      patient: {type: group, from: _id}
+
+  - name: GSE70947
+    expression: {path: data/raw/GSE70947_series_matrix.txt, format: geo_series_matrix}
+    transform: none
+    id_mapping: {path: data/raw/GPL13607_table.txt, id_column: ID, symbol_column: GeneName}
+    columns:
+      label: {type: category, from: "char:tissue", rules: {normal: "^normal$", tumour: "^tumor$"},
+              expected: {normal: 148, tumour: 148}}
+      patient: {type: group, from: title, strip_regex: "-(normal|tumor)$",
+                expected_groups_with_replicates: 148}

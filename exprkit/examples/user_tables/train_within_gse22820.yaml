@@ -1,0 +1,10 @@
+# Within one study only (GSE22820 rows of the ready-made tables: 176 tumours, 10 normals).
+data: data/processed/user_classification
+output: results/user_tables/within_gse22820
+seed: 42
+task: classification
+target: {column: label, positive_class: cancer}
+where: {study: [GSE22820]}
+genes: {filter: {max_mode_fraction: 1.0}}
+model: {type: logistic, grid: {C: [0.001, 0.01, 0.1, 1.0]}}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 20, bootstrap: 1000, permutations: 200}

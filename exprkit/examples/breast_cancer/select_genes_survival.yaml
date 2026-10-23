@@ -1,0 +1,17 @@
+# Build a survival gene list from GSE96058, treating its two sequencing
+# platforms (HiSeq 2000 and NextSeq 500) as two datasets: a gene must be
+# present on both, point the same way on both, be stable under resampling, and
+# not be highly correlated with a better gene.
+data: data/processed/gse96058
+split_by: platform
+output: results/gene_selection_gse96058_survival
+seed: 42
+task: survival
+target: {time: time, event: event}
+group_column: patient
+one_per_group: true
+n_genes: 50
+min_datasets: 2
+min_sign_agreement: 1.0
+max_correlation: 0.7
+stability: {n_boot: 50, top: 300, strength: 0.05}

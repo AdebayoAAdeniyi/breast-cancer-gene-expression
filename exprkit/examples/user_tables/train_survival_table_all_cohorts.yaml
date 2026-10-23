@@ -1,0 +1,17 @@
+# Same model on all 4,297 rows. The 888 rows from other series could not be
+# checked against their sources, and their imputed tumour sizes are set to missing
+# in prepare_survival_table.yaml. Folds are grouped by patient; cohort is not modelled.
+data: data/processed/user_survival
+output: results/user_tables/survival_all_cohorts_216genes
+seed: 42
+task: survival
+target: {time: time, event: event}
+group_column: patient
+one_per_group: true
+genes: {filter: {max_mode_fraction: 1.0}}
+covariates: {numeric: [age, tumour_size]}
+model:
+  type: coxnet
+  params: {l1_ratio: 0.5}
+  grid: {alpha: [0.01, 0.02, 0.05, 0.1, 0.2]}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 5, bootstrap: 1000, permutations: 0}

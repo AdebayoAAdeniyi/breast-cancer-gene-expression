@@ -1,0 +1,16 @@
+# Confounding test. Train normal (GSE22820) against tumour (GSE96058 only),
+# then score the GSE22820 tumours, which the model never saw:
+#   exprkit evaluate --model results/user_tables/confounding_test/model.joblib \
+#     --data data/processed/user_classification --where confounding_design=held_out \
+#     --out results/user_tables/confounding_test/gse22820_tumours
+# If the model had learned tumour biology, it would call them tumours. If it
+# had learned "which study", it would call them normal.
+data: data/processed/user_classification
+output: results/user_tables/confounding_test
+seed: 42
+task: classification
+target: {column: label, positive_class: cancer}
+where: {confounding_design: [train]}
+genes: {filter: {max_mode_fraction: 1.0}}
+model: {type: logistic, grid: {C: [0.01, 0.1, 1.0]}}
+evaluation: {type: repeated_cv, n_splits: 5, n_repeats: 5, bootstrap: 500, permutations: 0}
